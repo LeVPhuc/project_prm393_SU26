@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart'; // Import màn hình trang chủ mới tạo
-
+import 'register_screen.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -188,4 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Icon(icon, size: 32, color: color),
     );
   }
+
+
 }
