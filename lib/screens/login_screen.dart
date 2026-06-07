@@ -1,41 +1,68 @@
 import 'package:flutter/material.dart';
+import 'dashboard_screen.dart'; // Import màn hình trang chủ mới tạo
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // Định nghĩa các Controller để lấy dữ liệu nhập vào từ bàn phím
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  void _handleLogin() {
+    String username = _usernameController.text.trim();
+    String password = _passwordController.text.trim();
+
+    // LOGIC CHECK TÀI KHOẢN TEST HỢP LỆ
+    if (username == 'admin@vunven.com' && password == '12345678') {
+      // Đăng nhập thành công -> Chuyển sang Trang Chủ Dashboard
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    } else {
+      // Đăng nhập thất bại -> Hiển thị thông báo
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tài khoản hoặc mật khẩu test không đúng! (Gợi ý: admin@vunven.com / 12345678)'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Đồng bộ màu nền xanh lá tươi tắn ở đỉnh trên cùng theo bản thiết kế
       backgroundColor: const Color(0xFF10B981),
       body: Column(
         children: [
           const SizedBox(height: 60),
-          // PHẦN TIÊU ĐỀ: Slogan chữ lớn màu đen trên nền xanh theo đúng UI mẫu
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 40.0),
             child: Text(
               '“Vun Vén Từng Đồng\nAn Lòng Từng Bước”',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF064E3B), // Chữ xanh đậm quý phái
-                height: 1.3,
-              ),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF064E3B), height: 1.3),
             ),
           ),
-
-          // PHẦN THÂN: Khung nền trắng bo cong chứa toàn bộ form nhập liệu
           Expanded(
             child: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: Color(0xFFF2FBF7), // Màu nền xám trắng ánh xanh nhẹ của form
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(60),   // Bo tròn góc lớn bên trái
-                  topRight: Radius.circular(60),  // Bo tròn góc lớn bên phải
-                ),
+                color: Color(0xFFF2FBF7),
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(60), topRight: Radius.circular(60)),
               ),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -44,34 +71,24 @@ class LoginScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Ô nhập Tên Tài Khoản
-                      const Text(
-                        'Tên Tài Khoản',
-                        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54, fontSize: 15),
-                      ),
+                      const Text('Tên Tài Khoản', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54, fontSize: 15)),
                       const SizedBox(height: 8),
                       TextFormField(
+                        controller: _usernameController, // Gắn bộ lắng nghe dữ liệu
                         decoration: InputDecoration(
-                          hintText: 'example@example.com',
+                          hintText: 'admin@vunven.com',
                           hintStyle: const TextStyle(color: Colors.black26),
                           filled: true,
-                          fillColor: const Color(0xFFE2F6EE), // Màu ô nhập xanh pastel nhẹ
+                          fillColor: const Color(0xFFE2F6EE),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide.none,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Ô nhập Mật Khẩu
-                      const Text(
-                        'Mật Khẩu',
-                        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54, fontSize: 15),
-                      ),
+                      const Text('Mật Khẩu', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54, fontSize: 15)),
                       const SizedBox(height: 8),
                       TextFormField(
+                        controller: _passwordController, // Gắn bộ lắng nghe dữ liệu
                         obscureText: true,
                         decoration: InputDecoration(
                           hintText: '••••••••',
@@ -83,15 +100,12 @@ class LoginScreen extends StatelessWidget {
                             padding: EdgeInsets.only(right: 12.0),
                             child: Icon(Icons.visibility_off_outlined, color: Colors.black45),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide.none,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                         ),
                       ),
                       const SizedBox(height: 30),
 
-                      // Nút Đăng Nhập lớn màu xanh ngọc tươi
+                      // Nút Đăng Nhập đã được gắn hàm kích hoạt logic xử lý _handleLogin
                       SizedBox(
                         width: double.infinity,
                         height: 52,
@@ -100,73 +114,43 @@ class LoginScreen extends StatelessWidget {
                             backgroundColor: const Color(0xFF10B981),
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
-                          onPressed: () {},
-                          child: const Text(
-                            'Đăng Nhập',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                          onPressed: _handleLogin, // Gọi hàm xác thực khi bấm nút
+                          child: const Text('Đăng Nhập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                       ),
-
-                      // Quên mật khẩu
                       Center(
                         child: TextButton(
                           onPressed: () {},
-                          child: const Text(
-                            'Quên mật khẩu?',
-                            style: TextStyle(color: Colors.black54, fontSize: 14),
-                          ),
+                          child: const Text('Quên mật khẩu?', style: TextStyle(color: Colors.black54, fontSize: 14)),
                         ),
                       ),
-
-                      // Nút Đăng Ký (Đã sửa lỗi màu blackDE)
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE2F6EE),
-                            foregroundColor: Colors.black87, // Sử dụng màu đen mờ 87% chuẩn Flutter
+                            foregroundColor: Colors.black87,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
                           onPressed: () {},
-                          child: const Text(
-                            'Đăng Ký',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
+                          child: const Text('Đăng Ký', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ),
                       ),
-
-                      // Tính năng nâng cao: Đăng nhập với FaceID
+                      const SizedBox(height: 20),
                       Center(
                         child: TextButton.icon(
                           onPressed: () {},
                           icon: const Icon(Icons.fingerprint, color: Color(0xFF0D9488)),
-                          label: const Text(
-                            'Đăng Nhập Với FaceID',
-                            style: TextStyle(color: Color(0xFF0D9488), fontWeight: FontWeight.bold),
-                          ),
+                          label: const Text('Đăng Nhập Với FaceID', style: TextStyle(color: Color(0xFF0D9488), fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(height: 15),
-
-                      // Phân đoạn đăng nhập MXH
-                      const Center(
-                        child: Text(
-                          'Đăng nhập với',
-                          style: TextStyle(color: Colors.black38, fontSize: 13),
-                        ),
-                      ),
+                      const Center(child: Text('Đăng nhập với', style: TextStyle(color: Colors.black38, fontSize: 13))),
                       const SizedBox(height: 15),
-
-                      // Bộ đôi nút biểu tượng mạng xã hội (Facebook, Google)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -176,20 +160,13 @@ class LoginScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 25),
-
-                      // Dòng chữ điều hướng đăng ký cuối cùng (Đã sửa đổi sang onTap chuẩn xác)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text('Bạn chưa có tài khoản? ', style: TextStyle(color: Colors.black45)),
                           GestureDetector(
-                            onTap: () {
-                              // Xử lý sự kiện chuyển sang trang đăng ký tại đây
-                            },
-                            child: const Text(
-                              'Sign Up',
-                              style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold),
-                            ),
+                            onTap: () {},
+                            child: const Text('Sign Up', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
                           )
                         ],
                       )
@@ -204,15 +181,10 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  // Hàm bổ trợ vẽ nhanh nút MXH bo tròn tinh tế
   Widget _buildSocialButton(IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black12),
-        color: Colors.white,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.black12), color: Colors.white),
       child: Icon(icon, size: 32, color: color),
     );
   }
