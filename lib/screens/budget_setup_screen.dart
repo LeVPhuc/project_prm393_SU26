@@ -1,17 +1,36 @@
 import 'package:flutter/material.dart';
+import 'dashboard_screen.dart';
 
 class BudgetSetupScreen extends StatefulWidget {
-  const BudgetSetupScreen({Key? key}) : super(key: key);
+  final String userName; // Nhận tên người dùng từ bước trước
+
+  const BudgetSetupScreen({Key? key, required this.userName}) : super(key: key);
 
   @override
   State<BudgetSetupScreen> createState() => _BudgetSetupScreenState();
 }
 
 class _BudgetSetupScreenState extends State<BudgetSetupScreen> {
-  // Controller cho các trường ngân sách
-  final _foodController = TextEditingController(text: '5.000.000');
-  final _transportController = TextEditingController(text: '1.000.000');
-  final _shoppingController = TextEditingController(text: '2.000.000');
+  final _foodController = TextEditingController(text: '5000000');
+  final _transportController = TextEditingController(text: '1000000');
+  final _shoppingController = TextEditingController(text: '2000000');
+
+  // Hàm tính tổng ngân sách
+  int get totalBudget {
+    int food = int.tryParse(_foodController.text) ?? 0;
+    int transport = int.tryParse(_transportController.text) ?? 0;
+    int shopping = int.tryParse(_shoppingController.text) ?? 0;
+    return food + transport + shopping;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Lắng nghe thay đổi để cập nhật tổng ngân sách khi người dùng sửa số tiền
+    _foodController.addListener(() => setState(() {}));
+    _transportController.addListener(() => setState(() {}));
+    _shoppingController.addListener(() => setState(() {}));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,30 +47,24 @@ class _BudgetSetupScreenState extends State<BudgetSetupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Step Indicator
             _buildStepIndicator(),
             const SizedBox(height: 30),
 
-            const Text("Thiết lập hạn mức chi tiêu", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const Text("Bạn có thể chỉnh sửa số tiền cho từng danh mục", style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 20),
-
-            // Các trường nhập liệu danh mục
             _buildBudgetField("Ăn uống", Icons.restaurant, _foodController),
             _buildBudgetField("Di chuyển", Icons.directions_car, _transportController),
             _buildBudgetField("Mua sắm", Icons.shopping_bag, _shoppingController),
 
             const SizedBox(height: 40),
 
-            // Tổng kết
+            // Tổng kết ngân sách tự động cập nhật
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text("Tổng ngân sách", style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text("8.000.000 đ", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00875A), fontSize: 16)),
+                children: [
+                  const Text("Tổng ngân sách", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text("$totalBudget đ", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00875A), fontSize: 16)),
                 ],
               ),
             ),
@@ -62,7 +75,12 @@ class _BudgetSetupScreenState extends State<BudgetSetupScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00875A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 onPressed: () {
-                  // Điều hướng đến Dashboard sau khi hoàn tất
+                  // Điều hướng sang Dashboard và xóa sạch stack cũ
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => DashboardScreen(userName: widget.userName)),
+                        (route) => false,
+                  );
                 },
                 child: const Text("Hoàn tất", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),

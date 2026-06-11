@@ -25,8 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (username == 'admin@vunven.com' && password == '12345678') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
+        MaterialPageRoute(builder: (context) => DashboardScreen(userName: _usernameController.text)),      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

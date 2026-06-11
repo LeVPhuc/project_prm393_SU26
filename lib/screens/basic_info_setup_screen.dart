@@ -86,7 +86,7 @@ class _BasicInfoSetupScreenState extends State<BasicInfoSetupScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00875A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 onPressed: () {
                   // Chuyển hướng sang màn hình thiết lập ngân sách
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const BudgetSetupScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const BudgetSetupScreen(userName: "Le Van Phuc")));
                 },
                 child: const Text("Tiếp tục", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
