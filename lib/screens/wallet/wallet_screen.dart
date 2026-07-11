@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../models/wallet_model.dart';
 import '../../services/mock_data.dart';
 import '../../theme/app_theme.dart';
 import '../main_navigation.dart';
+import '../../utils/currency/currency_parser.dart';
+import '../../utils/currency/currency_extension.dart';
+import '../../utils/currency/currency_text_field.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -667,7 +669,7 @@ class _WalletFormSheetState extends State<_WalletFormSheet> {
     
     _nameController = TextEditingController(text: editWallet?.name ?? '');
     _balanceController = TextEditingController(
-      text: editWallet != null ? editWallet.balance.toStringAsFixed(0) : '',
+      text: editWallet != null ? editWallet.balance.toVndRaw() : '',
     );
     
     _selectedType = editWallet?.type ?? 'Tiền mặt';
@@ -686,7 +688,7 @@ class _WalletFormSheetState extends State<_WalletFormSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameController.text.trim();
-    final balance = double.tryParse(_balanceController.text.trim()) ?? 0.0;
+    final balance = CurrencyParser.parse(_balanceController.text);
     final editWallet = widget.walletToEdit;
 
     if (editWallet != null) {
@@ -797,12 +799,13 @@ class _WalletFormSheetState extends State<_WalletFormSheet> {
               const SizedBox(height: 6),
               TextFormField(
                 controller: _balanceController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [VndCurrencyInputFormatter()],
                 decoration: const InputDecoration(hintText: '0'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Vui lòng nhập số dư';
-                  if (double.tryParse(v) == null) return 'Số dư không hợp lệ';
+                  final parsed = CurrencyParser.parse(v);
+                  if (parsed < 0) return 'Số dư không hợp lệ';
                   return null;
                 },
               ),

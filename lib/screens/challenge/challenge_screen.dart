@@ -6,6 +6,8 @@ import '../../models/transaction_model.dart';
 import '../../services/mock_data.dart';
 import '../../theme/app_theme.dart';
 import '../main_navigation.dart';
+import '../../utils/currency/currency_parser.dart';
+import '../../utils/currency/currency_text_field.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
@@ -453,7 +455,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: controller,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [VndCurrencyInputFormatter()],
                 decoration: const InputDecoration(
                   hintText: 'Nhập số tiền gửi (đ)',
                 ),
@@ -464,7 +467,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
             ElevatedButton(
               onPressed: () {
-                final amount = double.tryParse(controller.text.trim()) ?? 0.0;
+                final amount = CurrencyParser.parse(controller.text);
                 if (amount <= 0) return;
 
                 // Kiểm tra số dư ví
@@ -1043,9 +1046,9 @@ class _AddChallengeSheetState extends State<_AddChallengeSheet> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    final limit = double.tryParse(_limitController.text.replaceAll('.', '')) ?? 0.0;
+    final limit = CurrencyParser.parse(_limitController.text);
     final bet = _selectedType == 'self_gambling'
-        ? (double.tryParse(_betController.text.replaceAll('.', '')) ?? 0.0)
+        ? CurrencyParser.parse(_betController.text)
         : 0.0;
 
     if (limit <= 0) return;
@@ -1211,12 +1214,13 @@ class _AddChallengeSheetState extends State<_AddChallengeSheet> {
               const SizedBox(height: 6),
               TextFormField(
                 controller: _limitController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [VndCurrencyInputFormatter()],
                 decoration: const InputDecoration(hintText: '0'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Vui lòng nhập số tiền';
-                  final parsed = double.tryParse(v.replaceAll('.', ''));
-                  if (parsed == null || parsed <= 0) return 'Số tiền không hợp lệ';
+                  final parsed = CurrencyParser.parse(v);
+                  if (parsed <= 0) return 'Số tiền không hợp lệ';
                   return null;
                 },
               ),
@@ -1228,12 +1232,13 @@ class _AddChallengeSheetState extends State<_AddChallengeSheet> {
                 const SizedBox(height: 6),
                 TextFormField(
                   controller: _betController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                  inputFormatters: [VndCurrencyInputFormatter()],
                   decoration: const InputDecoration(hintText: '0'),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Vui lòng nhập số tiền cược';
-                    final parsed = double.tryParse(v.replaceAll('.', ''));
-                    if (parsed == null || parsed < 0) return 'Số tiền cược không hợp lệ';
+                    final parsed = CurrencyParser.parse(v);
+                    if (parsed < 0) return 'Số tiền cược không hợp lệ';
                     return null;
                   },
                 ),

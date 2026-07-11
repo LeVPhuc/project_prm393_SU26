@@ -7,6 +7,8 @@ import '../../models/challenge_model.dart';
 import '../../models/wallet_model.dart';
 import '../../theme/app_theme.dart';
 import '../main_navigation.dart';
+import '../../utils/currency/currency_parser.dart';
+import '../../utils/currency/currency_text_field.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1759,7 +1761,7 @@ class _AddTransactionSheetState extends State<_AddTransactionSheet> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    final amount = double.tryParse(_amountController.text.replaceAll('.', '')) ?? 0.0;
+    final amount = CurrencyParser.parse(_amountController.text);
     if (amount <= 0) return;
 
     // 1. Tạo Giao dịch mới
@@ -2058,14 +2060,15 @@ class _AddTransactionSheetState extends State<_AddTransactionSheet> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _amountController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+                inputFormatters: [VndCurrencyInputFormatter()],
                 decoration: const InputDecoration(
                   hintText: '0',
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Vui lòng nhập số tiền';
-                  final parsed = double.tryParse(v.replaceAll('.', ''));
-                  if (parsed == null || parsed <= 0) return 'Số tiền không hợp lệ';
+                  final parsed = CurrencyParser.parse(v);
+                  if (parsed <= 0) return 'Số tiền không hợp lệ';
                   return null;
                 },
               ),
