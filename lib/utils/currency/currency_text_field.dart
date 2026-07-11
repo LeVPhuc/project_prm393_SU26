@@ -56,7 +56,7 @@ class VndCurrencyInputFormatter extends TextInputFormatter {
 
     if (cursorPosition != -1) {
       // Find how many digits were before the cursor in the unformatted updated text
-      final textBeforeCursor = textToParse.substring(0, cursorPosition.clamp(0, textToParse.length));
+      final textBeforeCursor = textToParse.substring(0, cursorPosition.clamp(0, textToParse.length).toInt());
       final digitsBeforeCursor = textBeforeCursor.replaceAll(RegExp(r'\D'), '').length;
 
       int digitsSeen = 0;
