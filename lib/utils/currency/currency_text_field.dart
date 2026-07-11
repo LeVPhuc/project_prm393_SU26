@@ -24,6 +24,7 @@ class VndCurrencyInputFormatter extends TextInputFormatter {
     // If so, we also delete the digit immediately preceding the dot.
     if (oldValue.text.length - newValue.text.length == 1 &&
         oldValue.selection.end > 0 &&
+        oldValue.selection.end <= oldValue.text.length &&
         oldValue.text[oldValue.selection.end - 1] == '.') {
       final oldCursor = oldValue.selection.end;
       final partBeforeDot = oldValue.text.substring(0, oldCursor - 1);
@@ -59,18 +60,22 @@ class VndCurrencyInputFormatter extends TextInputFormatter {
       final textBeforeCursor = textToParse.substring(0, cursorPosition.clamp(0, textToParse.length).toInt());
       final digitsBeforeCursor = textBeforeCursor.replaceAll(RegExp(r'\D'), '').length;
 
-      int digitsSeen = 0;
-      int newCursorPosition = 0;
-      for (int i = 0; i < formattedText.length; i++) {
-        if (RegExp(r'\d').hasMatch(formattedText[i])) {
-          digitsSeen++;
+      if (digitsBeforeCursor == 0) {
+        selectionIndex = 0;
+      } else {
+        int digitsSeen = 0;
+        int newCursorPosition = 0;
+        for (int i = 0; i < formattedText.length; i++) {
+          if (RegExp(r'\d').hasMatch(formattedText[i])) {
+            digitsSeen++;
+          }
+          newCursorPosition = i + 1;
+          if (digitsSeen == digitsBeforeCursor) {
+            break;
+          }
         }
-        newCursorPosition = i + 1;
-        if (digitsSeen == digitsBeforeCursor) {
-          break;
-        }
+        selectionIndex = newCursorPosition.clamp(0, formattedText.length);
       }
-      selectionIndex = newCursorPosition;
     }
 
     return TextEditingValue(
