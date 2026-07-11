@@ -78,9 +78,17 @@ class VndCurrencyInputFormatter extends TextInputFormatter {
       }
     }
 
+    TextRange composing = newValue.composing;
+    if (composing.isValid) {
+      final start = composing.start.clamp(0, formattedText.length);
+      final end = composing.end.clamp(0, formattedText.length);
+      composing = TextRange(start: start, end: end);
+    }
+
     return TextEditingValue(
       text: formattedText,
       selection: TextSelection.collapsed(offset: selectionIndex),
+      composing: composing,
     );
   }
 }
