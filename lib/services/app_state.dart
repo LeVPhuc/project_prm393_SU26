@@ -11,12 +11,14 @@ class AppState extends ChangeNotifier {
   bool _hasSeenOnboarding = false;
   String _userName = 'Người dùng';
   String _userEmail = '';
+  bool _notificationsEnabled = true;
 
   bool get isDarkMode => _isDarkMode;
   bool get isLoggedIn => _isLoggedIn;
   bool get hasSeenOnboarding => _hasSeenOnboarding;
   String get userName => _userName;
   String get userEmail => _userEmail;
+  bool get notificationsEnabled => _notificationsEnabled;
 
   ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
@@ -27,6 +29,7 @@ class AppState extends ChangeNotifier {
     _hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
     _userName = prefs.getString('userName') ?? 'Người dùng';
     _userEmail = prefs.getString('userEmail') ?? '';
+    _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
     notifyListeners();
   }
 
@@ -34,6 +37,22 @@ class AppState extends ChangeNotifier {
     _isDarkMode = !_isDarkMode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', _isDarkMode);
+    notifyListeners();
+  }
+
+  Future<void> updateProfile(String name, String email) async {
+    _userName = name;
+    _userEmail = email;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userName', name);
+    await prefs.setString('userEmail', email);
+    notifyListeners();
+  }
+
+  Future<void> toggleNotifications(bool value) async {
+    _notificationsEnabled = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notificationsEnabled', value);
     notifyListeners();
   }
 

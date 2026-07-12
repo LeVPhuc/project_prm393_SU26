@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/brand_logo.dart';
 import 'onboarding_screen.dart';
 import 'auth/login_screen.dart';
 import 'main_navigation.dart';
@@ -93,9 +94,9 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0F172A),
-              Color(0xFF0D9488),
-              Color(0xFF4F46E5),
+              Color(0xFF131A14),
+              Color(0xFF3A5A40),
+              Color(0xFF588157),
             ],
             stops: [0.0, 0.55, 1.0],
           ),
@@ -154,35 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             // Logo icon container
-                            Container(
-                              width: 110,
-                              height: 110,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(32),
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF14B8A6),
-                                    Color(0xFF0D9488),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary.withValues(alpha: 0.5),
-                                    blurRadius: 32,
-                                    spreadRadius: 4,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  '💰',
-                                  style: TextStyle(fontSize: 52),
-                                ),
-                              ),
-                            ),
+                             const BrandLogo(size: 110),
                             const SizedBox(height: 28),
                             // App name
                             const Text(

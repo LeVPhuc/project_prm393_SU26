@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       backgroundColor:
-          isDark ? AppColors.darkBg : const Color(0xFFF0FDF9),
+          isDark ? AppColors.darkBg : AppColors.lightBg,
       body: FadeTransition(
         opacity: _fadeAnim,
         child: SlideTransition(

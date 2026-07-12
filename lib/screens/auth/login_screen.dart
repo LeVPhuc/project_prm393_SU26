@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/brand_logo.dart';
 import '../main_navigation.dart';
 import 'register_screen.dart';
 
@@ -79,13 +80,13 @@ class _LoginScreenState extends State<LoginScreen>
             end: Alignment.bottomCenter,
             colors: isDark
                 ? [
-                    const Color(0xFF0F172A),
-                    const Color(0xFF0F2027),
-                    const Color(0xFF0F172A),
+                    const Color(0xFF131A14),
+                    const Color(0xFF1C251F),
+                    const Color(0xFF131A14),
                   ]
                 : [
-                    const Color(0xFFE0F7FA),
-                    const Color(0xFFF8FAFC),
+                    const Color(0xFFE8ECE5),
+                    const Color(0xFFFAF9F6),
                     const Color(0xFFFFFFFF),
                   ],
           ),
@@ -102,27 +103,8 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     const SizedBox(height: 48),
                     // Header
-                    Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF14B8A6), Color(0xFF0D9488)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Text('💰', style: TextStyle(fontSize: 38)),
-                        ),
-                      ),
+                    const Center(
+                      child: BrandLogo(size: 80),
                     ),
                     const SizedBox(height: 32),
                     Center(

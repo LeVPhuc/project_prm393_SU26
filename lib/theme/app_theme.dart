@@ -2,46 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Primary palette
-  static const Color primary = Color(0xFF0D9488); // Teal
-  static const Color primaryLight = Color(0xFF14B8A6);
-  static const Color primaryDark = Color(0xFF0F766E);
+  // Primary palette (Sage Green)
+  static const Color primary = Color(0xFF588157); // Sage Green
+  static const Color primaryLight = Color(0xFFA3B18A); // Soft Sage Green
+  static const Color primaryDark = Color(0xFF3A5A40); // Deep Forest Green
 
-  // Secondary palette
-  static const Color secondary = Color(0xFF4F46E5); // Indigo
-  static const Color secondaryLight = Color(0xFF6366F1);
+  // Secondary palette (Warm Sand/Clay)
+  static const Color secondary = Color(0xFFDDA15E); // Clay/Sand
+  static const Color secondaryLight = Color(0xFFE9C46A); // Warm Amber
 
   // Accent / Warning
-  static const Color accent = Color(0xFFF43F5E); // Rose
-  static const Color warning = Color(0xFFF59E0B); // Amber
-  static const Color success = Color(0xFF10B981); // Emerald
+  static const Color accent = Color(0xFFE76F51); // Terracotta Orange/Red
+  static const Color warning = Color(0xFFF4A261); // Sandy Orange
+  static const Color success = Color(0xFF2A9D8F); // Organic Teal Green
 
-  // Dark theme backgrounds
-  static const Color darkBg = Color(0xFF0F172A);
-  static const Color darkSurface = Color(0xFF1E293B);
-  static const Color darkCard = Color(0xFF334155);
-  static const Color darkBorder = Color(0xFF475569);
+  // Dark theme backgrounds (Organic Forest Dark)
+  static const Color darkBg = Color(0xFF131A14); // Deep Forest Green/Black
+  static const Color darkSurface = Color(0xFF1C251F); // Dark Forest Grey
+  static const Color darkCard = Color(0xFF243229); // Dark Greenish Card
+  static const Color darkBorder = Color(0xFF324638); // Forest Green Border
 
-  // Light theme backgrounds
-  static const Color lightBg = Color(0xFFF8FAFC);
+  // Light theme backgrounds (Warm Alabaster/Cream)
+  static const Color lightBg = Color(0xFFFAF9F6); // Cream Alabaster
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightCard = Color(0xFFF1F5F9);
-  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightCard = Color(0xFFF1F3EE); // Very light Sage grey-cream card
+  static const Color lightBorder = Color(0xFFE1E5DC); // Soft Sage border
 
   // Text
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF94A3B8);
-  static const Color textMuted = Color(0xFF64748B);
-  static const Color textOnLight = Color(0xFF0F172A);
-  static const Color textSecondaryOnLight = Color(0xFF475569);
+  static const Color textSecondary = Color(0xFFA3B18A); // Soft Sage Text for dark mode
+  static const Color textMuted = Color(0xFF7B8D7F); // Muted Sage
+  static const Color textOnLight = Color(0xFF2F3E32); // Deep forest green/charcoal text
+  static const Color textSecondaryOnLight = Color(0xFF58705F); // Medium forest green text
 
   // Category colors
-  static const Color catFood = Color(0xFFFF6B6B);
-  static const Color catTransport = Color(0xFF4ECDC4);
-  static const Color catShopping = Color(0xFFFFE66D);
-  static const Color catWork = Color(0xFF95E1D3);
-  static const Color catHealth = Color(0xFFA29BFE);
-  static const Color catEntertainment = Color(0xFFFD79A8);
+  static const Color catFood = Color(0xFFDDA15E); // Orange/Clay
+  static const Color catTransport = Color(0xFF8AB17D); // Soft Green
+  static const Color catShopping = Color(0xFFE9C46A); // Warm Yellow
+  static const Color catWork = Color(0xFF2A9D8F); // Organic Teal
+  static const Color catHealth = Color(0xFFE76F51); // Terracotta
+  static const Color catEntertainment = Color(0xFF9B5DE5); // Lavender/Lilac
+  static const Color catOther = Color(0xFF7B8D7F); // Muted Sage
 }
 
 class AppTheme {

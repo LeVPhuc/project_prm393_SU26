@@ -20,14 +20,44 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
   final List<String> _periods = ['Tuần này', 'Tháng này'];
 
+  List<Transaction> get _filteredTransactions {
+    final now = DateTime.now();
+    if (_selectedPeriod == 0) {
+      // Tuần này (Thứ Hai đến Chủ Nhật)
+      final startOfWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+      final endOfWeek = startOfWeek.add(const Duration(days: 7));
+      return MockData.transactions.where((tx) {
+        return (tx.date.isAtSameMomentAs(startOfWeek) || tx.date.isAfter(startOfWeek)) &&
+            tx.date.isBefore(endOfWeek);
+      }).toList();
+    } else {
+      // Tháng này
+      return MockData.transactions.where((tx) {
+        return tx.date.year == now.year && tx.date.month == now.month;
+      }).toList();
+    }
+  }
+
   Map<TransactionCategory, double> get _expenseByCategory {
     final Map<TransactionCategory, double> map = {};
-    for (final tx in MockData.transactions) {
+    for (final tx in _filteredTransactions) {
       if (tx.type == TransactionType.expense) {
         map[tx.category] = (map[tx.category] ?? 0) + tx.amount;
       }
     }
     return map;
+  }
+
+  double get _totalIncomeForPeriod {
+    return _filteredTransactions
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double get _totalExpenseForPeriod {
+    return _filteredTransactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   Color _categoryColor(TransactionCategory cat) {
@@ -49,6 +79,61 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     final expenseMap = _expenseByCategory;
     final total = expenseMap.values.fold(0.0, (a, b) => a + b);
     final categories = expenseMap.entries.toList();
+
+    // Tính toán dữ liệu cho biểu đồ cột
+    final now = DateTime.now();
+    final startOfWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+    final List<double> incomeValues = List.filled(7, 0.0);
+    final List<double> expenseValues = List.filled(7, 0.0);
+
+    for (int i = 0; i < 7; i++) {
+      final dayDate = startOfWeek.add(Duration(days: i));
+      for (final tx in MockData.transactions) {
+        if (tx.date.year == dayDate.year &&
+            tx.date.month == dayDate.month &&
+            tx.date.day == dayDate.day) {
+          if (tx.type == TransactionType.income) {
+            incomeValues[i] += tx.amount;
+          } else {
+            expenseValues[i] += tx.amount;
+          }
+        }
+      }
+    }
+
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final numWeeks = (daysInMonth > 28) ? 5 : 4;
+    final List<double> monthlyIncomeValues = List.filled(numWeeks, 0.0);
+    final List<double> monthlyExpenseValues = List.filled(numWeeks, 0.0);
+
+    for (final tx in MockData.transactions) {
+      if (tx.date.year == now.year && tx.date.month == now.month) {
+        final day = tx.date.day;
+        int weekIndex = (day - 1) ~/ 7;
+        if (weekIndex >= numWeeks) {
+          weekIndex = numWeeks - 1;
+        }
+        if (tx.type == TransactionType.income) {
+          monthlyIncomeValues[weekIndex] += tx.amount;
+        } else {
+          monthlyExpenseValues[weekIndex] += tx.amount;
+        }
+      }
+    }
+
+    double maxVal = 100000;
+    if (_selectedPeriod == 0) {
+      for (int i = 0; i < 7; i++) {
+        if (incomeValues[i] > maxVal) maxVal = incomeValues[i];
+        if (expenseValues[i] > maxVal) maxVal = expenseValues[i];
+      }
+    } else {
+      for (int i = 0; i < numWeeks; i++) {
+        if (monthlyIncomeValues[i] > maxVal) maxVal = monthlyIncomeValues[i];
+        if (monthlyExpenseValues[i] > maxVal) maxVal = monthlyExpenseValues[i];
+      }
+    }
+    final maxY = maxVal * 1.15;
 
     return Scaffold(
       body: CustomScrollView(
@@ -159,7 +244,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   Expanded(
                     child: _StatCard(
                       label: 'Tổng thu',
-                      value: formatter.format(MockData.totalIncome),
+                      value: formatter.format(_totalIncomeForPeriod),
                       color: AppColors.success,
                       icon: Icons.arrow_upward_rounded,
                       isDark: isDark,
@@ -169,7 +254,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   Expanded(
                     child: _StatCard(
                       label: 'Tổng chi',
-                      value: formatter.format(MockData.totalExpense),
+                      value: formatter.format(_totalExpenseForPeriod),
                       color: AppColors.accent,
                       icon: Icons.arrow_downward_rounded,
                       isDark: isDark,
@@ -203,77 +288,101 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 220,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: PieChart(
-                              PieChartData(
-                                pieTouchData: PieTouchData(
-                                  touchCallback: (event, response) {
-                                    setState(() {
-                                      if (!event.isInterestedForInteractions ||
-                                          response == null ||
-                                          response.touchedSection == null) {
-                                        _touchedIndex = -1;
-                                        return;
-                                      }
-                                      _touchedIndex = response.touchedSection!.touchedSectionIndex;
-                                    });
-                                  },
-                                ),
-                                borderData: FlBorderData(show: false),
-                                sectionsSpace: 3,
-                                centerSpaceRadius: 48,
-                                sections: List.generate(categories.length, (i) {
-                                  final entry = categories[i];
-                                  final isTouched = i == _touchedIndex;
-                                  final percentage = (entry.value / total * 100).toStringAsFixed(1);
-                                  return PieChartSectionData(
-                                    color: _categoryColor(entry.key),
-                                    value: entry.value,
-                                    title: isTouched ? '$percentage%' : '',
-                                    radius: isTouched ? 72 : 60,
-                                    titleStyle: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: categories
-                                .map(
-                                  (e) => Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 10,
-                                          height: 10,
-                                          decoration: BoxDecoration(
-                                            color: _categoryColor(e.key),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _categoryLabel(e.key),
-                                          style: Theme.of(context).textTheme.bodySmall,
-                                        ),
-                                      ],
+                      child: total == 0
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.pie_chart_outline_rounded,
+                                    size: 60,
+                                    color: AppColors.textMuted.withValues(alpha: 0.8),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Không có dữ liệu chi tiêu',
+                                    style: TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                )
-                                .toList(),
-                          ),
-                        ],
-                      ),
+                                ],
+                              ),
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: PieChart(
+                                    PieChartData(
+                                      pieTouchData: PieTouchData(
+                                        touchCallback: (event, response) {
+                                          setState(() {
+                                            if (!event.isInterestedForInteractions ||
+                                                response == null ||
+                                                response.touchedSection == null) {
+                                              _touchedIndex = -1;
+                                              return;
+                                            }
+                                            _touchedIndex = response.touchedSection!.touchedSectionIndex;
+                                          });
+                                        },
+                                      ),
+                                      borderData: FlBorderData(show: false),
+                                      sectionsSpace: 3,
+                                      centerSpaceRadius: 48,
+                                      sections: List.generate(categories.length, (i) {
+                                        final entry = categories[i];
+                                        final isTouched = i == _touchedIndex;
+                                        final percentage = (entry.value / total * 100).toStringAsFixed(1);
+                                        return PieChartSectionData(
+                                          color: _categoryColor(entry.key),
+                                          value: entry.value,
+                                          title: isTouched ? '$percentage%' : '',
+                                          radius: isTouched ? 72 : 60,
+                                          titleStyle: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: categories
+                                        .map(
+                                          (e) => Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 4),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    color: _categoryColor(e.key),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  _categoryLabel(e.key),
+                                                  style: Theme.of(context).textTheme.bodySmall,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ],
                 ),
@@ -298,7 +407,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Thu chi 7 ngày qua',
+                      _selectedPeriod == 0 ? 'Thu chi tuần này' : 'Thu chi tháng này',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
@@ -319,8 +428,30 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       child: BarChart(
                         BarChartData(
                           alignment: BarChartAlignment.spaceAround,
-                          maxY: 15000000,
-                          barTouchData: BarTouchData(enabled: false),
+                          maxY: maxY,
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (group) => isDark ? AppColors.darkCard : Colors.white,
+                              tooltipBorder: BorderSide(
+                                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                                width: 1,
+                              ),
+                              tooltipRoundedRadius: 8,
+                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                final isIncome = rodIndex == 0;
+                                final label = isIncome ? 'Thu' : 'Chi';
+                                return BarTooltipItem(
+                                  '$label: ${formatter.format(rod.toY)}',
+                                  TextStyle(
+                                    color: isIncome ? AppColors.success : AppColors.accent,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                           titlesData: FlTitlesData(
                             show: true,
                             leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -330,14 +461,39 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, _) {
-                                  final days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-                                  return Text(
-                                    days[value.toInt() % 7],
-                                    style: const TextStyle(
-                                      color: AppColors.textMuted,
-                                      fontSize: 11,
-                                    ),
-                                  );
+                                  if (_selectedPeriod == 0) {
+                                    final days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                                    final idx = value.toInt();
+                                    if (idx >= 0 && idx < 7) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Text(
+                                          days[idx],
+                                          style: const TextStyle(
+                                            color: AppColors.textMuted,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    final idx = value.toInt();
+                                    if (idx >= 0 && idx < numWeeks) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Text(
+                                          'Tuần ${idx + 1}',
+                                          style: const TextStyle(
+                                            color: AppColors.textMuted,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  return const Text('');
                                 },
                               ),
                             ),
@@ -353,27 +509,30 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                             ),
                           ),
                           borderData: FlBorderData(show: false),
-                          barGroups: List.generate(7, (i) {
-                            final incomeValues = [12000000.0, 0.0, 3500000.0, 0.0, 0.0, 0.0, 0.0];
-                            final expenseValues = [0.0, 500000.0, 1200000.0, 800000.0, 350000.0, 680000.0, 64000.0];
-                            return BarChartGroupData(
-                              x: i,
-                              barRods: [
-                                BarChartRodData(
-                                  toY: incomeValues[i],
-                                  color: AppColors.success,
-                                  width: 10,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                BarChartRodData(
-                                  toY: expenseValues[i],
-                                  color: AppColors.accent,
-                                  width: 10,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ],
-                            );
-                          }),
+                          barGroups: List.generate(
+                            _selectedPeriod == 0 ? 7 : numWeeks,
+                            (i) {
+                              final double inc = _selectedPeriod == 0 ? incomeValues[i] : monthlyIncomeValues[i];
+                              final double exp = _selectedPeriod == 0 ? expenseValues[i] : monthlyExpenseValues[i];
+                              return BarChartGroupData(
+                                x: i,
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: inc,
+                                    color: AppColors.success,
+                                    width: 10,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  BarChartRodData(
+                                    toY: exp,
+                                    color: AppColors.accent,
+                                    width: 10,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
