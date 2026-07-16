@@ -19,6 +19,7 @@ dependencies:
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
   meta: ^1.11.0
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   flutter_test:

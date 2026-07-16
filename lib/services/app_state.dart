@@ -12,6 +12,7 @@ class AppState extends ChangeNotifier {
   String _userName = 'Người dùng';
   String _userEmail = '';
   bool _notificationsEnabled = true;
+  String _geminiApiKey = '';
 
   bool get isDarkMode => _isDarkMode;
   bool get isLoggedIn => _isLoggedIn;
@@ -19,6 +20,7 @@ class AppState extends ChangeNotifier {
   String get userName => _userName;
   String get userEmail => _userEmail;
   bool get notificationsEnabled => _notificationsEnabled;
+  String get geminiApiKey => _geminiApiKey;
 
   ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
@@ -30,6 +32,7 @@ class AppState extends ChangeNotifier {
     _userName = prefs.getString('userName') ?? 'Người dùng';
     _userEmail = prefs.getString('userEmail') ?? '';
     _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
+    _geminiApiKey = prefs.getString('geminiApiKey') ?? '';
     notifyListeners();
   }
 
@@ -78,6 +81,13 @@ class AppState extends ChangeNotifier {
     _hasSeenOnboarding = true;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasSeenOnboarding', true);
+    notifyListeners();
+  }
+
+  Future<void> updateGeminiApiKey(String key) async {
+    _geminiApiKey = key;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('geminiApiKey', key);
     notifyListeners();
   }
 }

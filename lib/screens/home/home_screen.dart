@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../main_navigation.dart';
 import '../../utils/currency/currency_parser.dart';
 import '../../utils/currency/currency_text_field.dart';
+import '../chatbot/chatbot_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -411,6 +412,35 @@ class _HomeScreenState extends State<HomeScreen>
                           ],
                         ),
                       ),
+                      // AI Chatbot button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChatbotScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.15),
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '🤖',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Notification bell
                       GestureDetector(
                         onTap: () => _showNotificationsBottomSheet(context),

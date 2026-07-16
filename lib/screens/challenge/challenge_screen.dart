@@ -18,16 +18,37 @@ class ChallengeScreen extends StatefulWidget {
 
 class _ChallengeScreenState extends State<ChallengeScreen> {
   String _selectedFilter = 'active'; // 'all', 'active', 'completed', 'failed'
+  String _selectedPriceFilter = 'all'; // 'all', 'under_1m', '1m_5m', '5m_10m', 'over_10m'
 
   List<ChallengeModel> get _filteredChallenges {
     return MockData.challenges.where((c) {
+      // 1. Lọc theo trạng thái
+      bool matchStatus = true;
       switch (_selectedFilter) {
         case 'active':
-          return c.status == ChallengeStatus.active || c.status == ChallengeStatus.pending;
+          matchStatus = c.status == ChallengeStatus.active || c.status == ChallengeStatus.pending;
+          break;
         case 'completed':
-          return c.status == ChallengeStatus.completed;
+          matchStatus = c.status == ChallengeStatus.completed;
+          break;
         case 'failed':
-          return c.status == ChallengeStatus.failed || c.status == ChallengeStatus.forfeited;
+          matchStatus = c.status == ChallengeStatus.failed || c.status == ChallengeStatus.forfeited;
+          break;
+        default:
+          matchStatus = true;
+      }
+      if (!matchStatus) return false;
+
+      // 2. Lọc theo khoảng giá tiết kiệm
+      switch (_selectedPriceFilter) {
+        case 'under_1m':
+          return c.targetAmount < 1000000;
+        case '1m_5m':
+          return c.targetAmount >= 1000000 && c.targetAmount <= 5000000;
+        case '5m_10m':
+          return c.targetAmount > 5000000 && c.targetAmount <= 10000000;
+        case 'over_10m':
+          return c.targetAmount > 10000000;
         default:
           return true;
       }
@@ -495,10 +516,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   // Kiểm tra hoàn thành mục tiêu tích lũy
                   if (updated.actualSpent >= updated.spendLimit) {
                     MockData.challenges[cIdx] = updated.copyWith(status: ChallengeStatus.completed);
+                    _awardChallengeXP(150, challenge.title);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         backgroundColor: AppColors.success,
-                        content: Text('🎉 Chúc mừng! Bạn đã hoàn thành mục tiêu tích lũy "${challenge.title}"!'),
+                        content: Text('🎉 Chúc mừng! Bạn đã hoàn thành mục tiêu tích lũy "${challenge.title}" và nhận +150 XP!'),
                       ),
                     );
                   } else {
@@ -530,6 +552,56 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     );
   }
 
+  void _awardChallengeXP(int xpAmount, String challengeTitle) {
+    MockData.currentXP += xpAmount;
+    bool leveledUp = false;
+    int oldLevel = MockData.level;
+
+    while (MockData.currentXP >= MockData.xpForNextLevel) {
+      MockData.currentXP -= MockData.xpForNextLevel;
+      MockData.level += 1;
+      MockData.xpForNextLevel = MockData.level * 150;
+      leveledUp = true;
+    }
+
+    if (leveledUp) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return AlertDialog(
+            backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Row(
+              children: [
+                const Text('🎉 ', style: TextStyle(fontSize: 24)),
+                Text(
+                  'THĂNG CẤP MỚI!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                    fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Chúc mừng bạn đã thăng cấp từ Cấp $oldLevel lên Cấp ${MockData.level}!\nNhận thêm nhiều quyền lợi mới và tiếp tục kỷ luật tài chính nhé! 💪',
+              style: const TextStyle(fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Tuyệt vời', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
+      );
+    }
+    setState(() {});
+  }
+
   void _completeChallenge(ChallengeModel challenge) {
     final cIdx = MockData.challenges.indexOf(challenge);
     if (cIdx != -1) {
@@ -545,10 +617,12 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         }
       }
 
+      _awardChallengeXP(150, challenge.title);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.success,
-          content: Text('🏆 Thành công xuất sắc! Hoàn tất thách đấu "${challenge.title}" và nhận lại ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0).format(challenge.betAmount)} tiền cược!'),
+          content: Text('🏆 Thành công xuất sắc! Hoàn tất thách đấu "${challenge.title}" (Nhận lại ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0).format(challenge.betAmount)} tiền cược & +150 XP)!'),
         ),
       );
       setState(() {});
@@ -694,7 +768,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           // Filter bar
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -706,6 +780,29 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                     _buildFilterChip('failed', 'Thất bại'),
                     const SizedBox(width: 8),
                     _buildFilterChip('all', 'Tất cả'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Price range filter bar
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildPriceFilterChip('all', 'Tất cả khoảng giá'),
+                    const SizedBox(width: 8),
+                    _buildPriceFilterChip('under_1m', 'Dưới 1M'),
+                    const SizedBox(width: 8),
+                    _buildPriceFilterChip('1m_5m', '1M - 5M'),
+                    const SizedBox(width: 8),
+                    _buildPriceFilterChip('5m_10m', '5M - 10M'),
+                    const SizedBox(width: 8),
+                    _buildPriceFilterChip('over_10m', 'Trên 10M'),
                   ],
                 ),
               ),
@@ -781,6 +878,24 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       onSelected: (selected) {
         if (selected) {
           setState(() => _selectedFilter = filterKey);
+        }
+      },
+    );
+  }
+
+  Widget _buildPriceFilterChip(String filterKey, String label) {
+    final isSelected = _selectedPriceFilter == filterKey;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      selectedColor: AppColors.secondary.withValues(alpha: 0.15),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.secondary : AppColors.textMuted,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      onSelected: (selected) {
+        if (selected) {
+          setState(() => _selectedPriceFilter = filterKey);
         }
       },
     );
@@ -1025,8 +1140,38 @@ class _AddChallengeSheetState extends State<_AddChallengeSheet> {
   late WalletModel _selectedWallet;
   bool _enableAiDuel = false;
   int _initialShields = 0;
+  String _selectedPriceRange = 'all'; // 'all', 'under_1m', '1m_5m', '5m_10m', 'over_10m'
 
   final List<String> _emojis = ['🎯', '📱', '🥗', '🌄', '🛡️', '✈️', '🛒', '🍜', '🚗'];
+
+  Widget _buildRangeChip(String rangeKey, String label) {
+    final isSelected = _selectedPriceRange == rangeKey;
+    return ChoiceChip(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      label: Text(label, style: const TextStyle(fontSize: 11)),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedPriceRange = selected ? rangeKey : 'all';
+        });
+      },
+    );
+  }
+
+  List<double> _getSuggestedAmountsForRange(String range) {
+    switch (range) {
+      case 'under_1m':
+        return [200000.0, 500000.0, 800000.0];
+      case '1m_5m':
+        return [1000000.0, 2000000.0, 3000000.0, 5000000.0];
+      case '5m_10m':
+        return [6000000.0, 7500000.0, 9000000.0, 10000000.0];
+      case 'over_10m':
+        return [15000000.0, 20000000.0, 30000000.0, 50000000.0];
+      default:
+        return [];
+    }
+  }
 
   @override
   void initState() {
@@ -1224,6 +1369,61 @@ class _AddChallengeSheetState extends State<_AddChallengeSheet> {
                   return null;
                 },
               ),
+              const SizedBox(height: 8),
+
+              // Khoảng giá trị gợi ý và nút điền nhanh số tiền (chỉ khi là thử thách tiết kiệm/tích lũy)
+              if (_selectedType == 'saving') ...[
+                const Text('Chọn nhanh khoảng tiền tiết kiệm:', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                const SizedBox(height: 6),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildRangeChip('under_1m', 'Dưới 1M'),
+                      const SizedBox(width: 6),
+                      _buildRangeChip('1m_5m', '1M - 5M'),
+                      const SizedBox(width: 6),
+                      _buildRangeChip('5m_10m', '5M - 10M'),
+                      const SizedBox(width: 6),
+                      _buildRangeChip('over_10m', 'Trên 10M'),
+                    ],
+                  ),
+                ),
+                if (_selectedPriceRange != 'all') ...[
+                  const SizedBox(height: 8),
+                  const Text('Giá trị cụ thể gợi ý:', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  const SizedBox(height: 6),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _getSuggestedAmountsForRange(_selectedPriceRange).map((val) {
+                        final formattedVal = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(val);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ActionChip(
+                            backgroundColor: isDark ? AppColors.darkSurface : Colors.grey[200],
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            label: Text(
+                              formattedVal,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            onPressed: () {
+                              // Định dạng chuỗi không dấu để lưu/hiển thị
+                              final rawVal = NumberFormat.currency(locale: 'vi_VN', symbol: '', decimalDigits: 0).format(val).trim();
+                              _limitController.text = rawVal;
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ],
               const SizedBox(height: 16),
 
               // Bet Amount (only if self-gambling)
